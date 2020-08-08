@@ -37,6 +37,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'oauth2_provider',
+    'social_django',
+    'rest_framework_social_oauth2',
+    'accounts'
 ]
 
 MIDDLEWARE = [
@@ -62,6 +66,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'social_django.context_processors.backends',
+                'social_django.context_processors.login_redirect',
             ],
         },
     },
@@ -118,3 +124,121 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
+
+
+# Setting for django-rest-framework-social-oauth2
+
+TEMPLATE_CONTEXT_PROCESSORS = (
+    'social_django.context_processors.backends',
+    'social_django.context_processors.login_redirect',
+)
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        # 'oauth2_provider.ext.rest_framework.OAuth2Authentication',  # django-oauth-toolkit < 1.0.0
+        # django-oauth-toolkit >= 1.0.0
+        'oauth2_provider.contrib.rest_framework.OAuth2Authentication',
+        'rest_framework_social_oauth2.authentication.SocialAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny',
+    ],
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
+    ],
+    'DEFAULT_PARSER_CLASSES': [
+        'rest_framework.parsers.JSONParser',
+        'rest_framework.parsers.FormParser',
+        'rest_framework.parsers.MultiPartParser'
+    ]
+}
+
+AUTHENTICATION_BACKENDS = (
+    # Google OAuth2
+    'social_core.backends.google.GoogleOAuth2',
+
+    # Facebook OAuth2
+    'social_core.backends.facebook.FacebookAppOAuth2',
+    'social_core.backends.facebook.FacebookOAuth2',
+
+    # django-rest-framework-social-oauth2
+    'rest_framework_social_oauth2.backends.DjangoOAuth2',
+
+    # Django
+    'django.contrib.auth.backends.ModelBackend',
+)
+
+# Facebook configuration
+SOCIAL_AUTH_FACEBOOK_KEY = '598118321140841'
+SOCIAL_AUTH_FACEBOOK_SECRET = '399c893e415c62736714e40d99b8a80a'
+
+# Define SOCIAL_AUTH_FACEBOOK_SCOPE to get extra permissions from Facebook.
+# Email is not sent by default, to get it, you must request the email permission.
+SOCIAL_AUTH_FACEBOOK_SCOPE = ['email']
+SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {
+    'fields': 'id, name, email, picture.type(large)'
+}
+SOCIAL_AUTH_FACEBOOK_EXTRA_DATA = [
+    ('name', 'name'),
+    ('email', 'email'),
+    ('picture', 'picture')
+]
+
+# Google configuration
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = '206687016939-cug2jo0ilcj9mardhrf0i33bit73vud3.apps.googleusercontent.com'
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = 'GYpXtPZhLDnRwr7ho93pk-ne'
+
+# Define SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE to get extra permissions from Google.
+SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = [
+    'https://www.googleapis.com/auth/userinfo.email',
+    'https://www.googleapis.com/auth/userinfo.profile',
+]
+
+# Configure custom pipeline
+SOCIAL_AUTH_PIPELINE = (
+    'social_core.pipeline.social_auth.social_details',
+    'social_core.pipeline.social_auth.social_uid',
+    'social_core.pipeline.social_auth.auth_allowed',
+    'social_core.pipeline.social_auth.social_user',
+    'accounts.custom_pipeline.pipeline.user.get_username',
+    'accounts.custom_pipeline.pipeline.user.create_user',
+    'social_core.pipeline.social_auth.associate_user',
+    'accounts.custom_pipeline.pipeline.social_auth.load_extra_data',
+    'accounts.custom_pipeline.pipeline.user.user_details',
+    'accounts.custom_pipeline.pipeline.user.get_avatar'
+)
+
+# This configured has been used in accounts.custom_pipeline.pipeline.user.get_username
+SLUGIFY_USERNAMES = True
+
+# Configure for using 'sub' instead of using 'email' in 'uid' field of UserSocialAuth
+# This configured has been used in social_core.backends.google.BaseGoogleAuth  
+USE_UNIQUE_USER_ID = True
+
+# SITE_NAME
+SITE_NAME = "localhost:8000"
+
+# Configure for send email 
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'phamvanthoaibk@gmail.com'
+EMAIL_HOST_PASSWORD = 'jdyhmwfodetpisxn'
+EMAIL_USE_TLS = True
+
+
+AUTH_USER_MODEL = 'accounts.Account'
+
+
+
+# Configure app's name for send validation email
+APP_NAME = 'Myblog'
+
+# Configure avatar size
+THUMBNAIL_SIZE_MEDIUM = (500, 500)
+THUMBNAIL_SIZE_SMALL = (100, 100)
+THUMBNAIL_SIZE_TINY = (30, 30)
