@@ -86,4 +86,19 @@ def load_extra_data(backend, details, response, uid, user, *args, **kwargs):
         extra_data = backend.extra_data(user, uid, response, details,
                                         *args, **kwargs)
         social.set_extra_data(extra_data)
-        
+
+def unique_by_email(backend, details, user=None, *args, **kwargs):
+
+    if user:
+        return None
+
+    email = details.get('email')
+    if email:
+        users = list(backend.strategy.storage.user.get_users_by_email(email))
+        if len(users) == 0:
+            return None
+        else:
+            raise AuthException(
+                backend,
+                'The given email address already exists'
+            )
