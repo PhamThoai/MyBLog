@@ -23,7 +23,7 @@ def send_email_confirm(instance):
     <p>Thank you and have a great day!</p>
     """.format(username = instance.username, url=url)
 
-    print(content) # In ra content để kiểm tra
+    # print(content) # In ra content để kiểm tra
 
     send_mail(
         title,
