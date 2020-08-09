@@ -28,6 +28,8 @@ media
 .Python
 build/
 .idea/
+
+.idea
 develop-eggs/
 dist/
 downloads/
@@ -146,5 +148,12 @@ dmypy.json
 
 # pytype static type analyzer
 .pytype/
+
+### VisualStudioCode template
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
 
 # End of https://www.toptal.com/developers/gitignore/api/django
