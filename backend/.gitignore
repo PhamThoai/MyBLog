@@ -28,11 +28,8 @@ media
 .Python
 build/
 .idea/
-<<<<<<< HEAD
 
 .idea
-=======
->>>>>>> create_tags_app
 develop-eggs/
 dist/
 downloads/
