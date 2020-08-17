@@ -26,7 +26,7 @@ A blog system based on `Python 3.7.3` and `Django3.0.8`.
    Open the command line, go to the folder where the project is saved, and enter the following command:
 
    ```
-   git clone https://github.com/zmrenwu/django-blog-tutorial.git
+   git clone https://github.com/PhamThoai/MyBLog.git
    ```
 2. Create and activate a virtual environment
 
