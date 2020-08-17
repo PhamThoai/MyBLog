@@ -180,8 +180,8 @@ AUTHENTICATION_BACKENDS = (
 )
 
 # Facebook configuration
-SOCIAL_AUTH_FACEBOOK_KEY = '598118321140841'
-SOCIAL_AUTH_FACEBOOK_SECRET = '399c893e415c62736714e40d99b8a80a'
+SOCIAL_AUTH_FACEBOOK_KEY = '<your app id goes here>'
+SOCIAL_AUTH_FACEBOOK_SECRET = '<your app secret goes here>'
 
 # Define SOCIAL_AUTH_FACEBOOK_SCOPE to get extra permissions from Facebook.
 # Email is not sent by default, to get it, you must request the email permission.
@@ -196,8 +196,8 @@ SOCIAL_AUTH_FACEBOOK_EXTRA_DATA = [
 ]
 
 # Google configuration
-SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = '206687016939-cug2jo0ilcj9mardhrf0i33bit73vud3.apps.googleusercontent.com'
-SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = 'GYpXtPZhLDnRwr7ho93pk-ne'
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = '<your app id goes here>'
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = '<your app secret goes here>'
 
 # Define SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE to get extra permissions from Google.
 SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = [
