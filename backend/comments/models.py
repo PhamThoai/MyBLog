@@ -12,7 +12,7 @@ class Comment(models.Model):
     last_mod = models.DateTimeField(auto_now=True)
     author = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
-    parent_comment = models.ForeignKey('self', null=True, on_delete=models.CASCADE)
+    parent_comment = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE)
 
     class Meta:
         ordering = ['-created_at']

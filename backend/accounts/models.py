@@ -37,7 +37,6 @@ class Account(AbstractUser):
         super(Account, self).save( *args, **kwargs)
         self.old_email = self.email
     
-
     def add_relationship(self, person, status, description=None):
         relationship, created = Relationship.objects.get_or_create(
             from_person=self,
@@ -70,21 +69,15 @@ class Account(AbstractUser):
     def get_followers(self):
         return self.get_related_to(RELATIONSHIP_FOLLOWING)
 
-    # Chưa dùng được vì chưa chính xác. tạo thời truy vấn trục tiếp từ Relationship
-    # def check_followed(self, who):
-    #     return self.relationships.filter(
-    #         to_people__status=status,
-    #         to_people__from_person=self,
-    #         to_people__to_person=who
-    #     ).exists()
-
     def get_user_social(self):
         try:
             user_social = UserSocialAuth.objects.get(user=self.id)
         except UserSocialAuth.DoesNotExist:
             return None
         return user_social
-
+    
+    def get_posts(self):
+        return self.author_of.all()
 
 def make_slug_random(instance):
     slug = ''
@@ -104,7 +97,6 @@ def make_slug_random(instance):
             except UserModel.DoesNotExist:
                 return slug
 
-
 @receiver(pre_save, sender=Account)
 def pre_save_user_receiever(sender, instance, *args, **kwargs):
     if not instance.display_name:
@@ -112,7 +104,6 @@ def pre_save_user_receiever(sender, instance, *args, **kwargs):
     
     if not instance.slug:
         instance.slug = make_slug_random(instance) 
-
 
 @receiver(post_save, sender=Account)
 def post_save_user_receiever(sender, instance, *args, **kwargs):

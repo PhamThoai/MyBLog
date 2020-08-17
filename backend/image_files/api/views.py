@@ -29,8 +29,8 @@ class ImageList(APIView):
         context = {'me': me}
         serializer = UploadImageSerializer(data=request.data, context=context)
         if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            image = serializer.save()
+            return Response(DetailImageSerializer(image).data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -49,18 +49,20 @@ class ImageDetail(APIView):
 
     def get(self, request, image_id, format=None):
         image = self.get_object(image_id)
+        if image.owner != request.user:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
         serializer = DetailImageSerializer(image)
         return Response(serializer.data)
 
-    def delete(self, request, image_id, format=None):
-        try:
-            me = request.user
-        except:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+    # def delete(self, request, image_id, format=None):
+    #     try:
+    #         me = request.user
+    #     except:
+    #         return Response(status=status.HTTP_404_NOT_FOUND)
         
-        image = self.get_object(image_id)
+    #     image = self.get_object(image_id)
 
-        if me != image.owner
-            return Response(status=status.HTTP_403_FORBIDDEN)
-        image.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    #     if me != image.owner
+    #         return Response(status=status.HTTP_403_FORBIDDEN)
+    #     image.delete()
+    #     return Response(status=status.HTTP_204_NO_CONTENT)

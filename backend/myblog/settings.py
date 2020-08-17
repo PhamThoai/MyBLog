@@ -40,7 +40,11 @@ INSTALLED_APPS = [
     'oauth2_provider',
     'social_django',
     'rest_framework_social_oauth2',
-    'accounts'
+    'accounts',
+    'image_files',
+    'tags',
+    'posts',
+    'comments',
 ]
 
 MIDDLEWARE = [
@@ -154,7 +158,10 @@ REST_FRAMEWORK = {
         'rest_framework.parsers.JSONParser',
         'rest_framework.parsers.FormParser',
         'rest_framework.parsers.MultiPartParser'
-    ]
+    ],
+
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 20
 }
 
 AUTHENTICATION_BACKENDS = (

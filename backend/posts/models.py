@@ -18,24 +18,27 @@ class Post(models.Model):
     description = models.CharField(_('description'), max_length=255)
     content = models.TextField(_('content'), )
     is_draft = models.BooleanField(_('is draft'), default=True)
+    is_publish = models.BooleanField(_('is publish'), default=False)
     enable_cmt = models.BooleanField(_('enable comment'), default=True) 
     author = models.ForeignKey(
         settings.AUTH_USER_MODEL, 
-        verbose_name=_('title'), 
-        on_delete=models.CASCADE
+        verbose_name=_('author'), 
+        on_delete=models.CASCADE,
+        related_name='author_of'
     )
     create_at = models.DateTimeField(_('create at'), auto_now_add=True)
     update_at = models.DateTimeField(_('update at'), auto_now=True)
-    publish_at = models.DateTimeField(_('publish at'), null=True)
-    read_time = models.PositiveSmallIntegerField(_('read time'))
+    publish_at = models.DateTimeField(_('publish at'), null=True, blank=True)
+    read_time = models.PositiveSmallIntegerField(_('read time'), null=True, blank=True)
     publish_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, 
-        verbose_name=_('publishing manager'), , 
-        on_delete=models.CASCADE, null=True
+        verbose_name=_('publishing manager'),
+        on_delete=models.CASCADE, null=True, blank=True,
+        related_name='publish'
     )
     tags = models.ManyToManyField(Tag)
-    views = models.IntegerField(_('title'), default=0)
-    images = models.ManyToManyField(ImageForPost)
+    views = models.IntegerField(_('views'), default=0)
+    # images = models.ManyToManyField(ImageForPost)
 
     class Meta:
         ordering = ['-publish_at']
@@ -54,6 +57,12 @@ class Post(models.Model):
         markdown_text = markdown(content)
         return mark_safe(markdown_text)
 
+    def get_author_object(self):
+        try:
+            user = Account.objects.get(id=self.author)
+        except Account.DoesNotExist:
+            user = None
+        return user
 
 
 def create_unique_slug(instance):
@@ -65,16 +74,19 @@ def create_unique_slug(instance):
     return create_unique_slug(instance)
 
 def pre_save_post_receiver(sender, instance, *args, **kwargs):
+    
     slug = slugify(instance.title)
-    if Post.objects.filter(slug=slug).count() != 0:
-        slug = create_unique_slug(instance)
-    instance.slug = slug
+    try:
+        post = Post.objects.get(slug=slug)
+        if post.id == instance.id:
+            instance.slug = slug
+        else:
+            instance.slug = create_unique_slug(instance)
+    except Post.DoesNotExist:
+        instance.slug = slug
 
     if not instance.id:
         instance.publish_at = now()
 
 pre_save.connect(pre_save_post_receiver, sender=Post)
 
-
-
-    

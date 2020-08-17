@@ -23,4 +23,8 @@ urlpatterns = [
     path('auth/', include('rest_framework_social_oauth2.urls')),
 
     path('api/users/', include("accounts.api.urls", namespace='accounts-api')),
+    path('api/posts/', include("posts.api.urls", namespace='posts-api')),
+    path('api/comments/', include("comments.api.urls", namespace='comments-api')),
+    path('api/tags/', include("tags.api.urls", namespace='tags-api')),
+    path('api/images/', include("image_files.api.urls", namespace='image_files-api')),
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

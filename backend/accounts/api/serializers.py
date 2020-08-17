@@ -7,11 +7,13 @@ from accounts.models import (
     RELATIONSHIP_REPORT,
 
 )
+from django.db.models import Sum
 from django.utils.translation import gettext_lazy as _
 from PIL import Image
 from django.core.files.base import ContentFile
 from io import BytesIO
 from uuid import uuid4
+from posts.models import Post
 
 class RegisterSerializer(serializers.ModelSerializer):
     confirm_password = serializers.CharField()
@@ -66,23 +68,31 @@ class DetailAccountSerializer(serializers.ModelSerializer):
     followed = serializers.SerializerMethodField('get_followed')
     followers = serializers.SerializerMethodField('get_followers')
     following = serializers.SerializerMethodField('get_following')
-    # posts = serializers.SerializerMethodField('get_posts_num')
-    # total_view = serializers.SerializerMethodField('get_total_view')
+    posts = serializers.SerializerMethodField('get_posts')
+    total_view = serializers.SerializerMethodField('get_total_view')
     
     class Meta:
         model = Account
-        fields = ('slug', 'avatar', 'email', 'display_name', 'introduction', 'followers', 'following', 'followed') # posts, total_view
+        fields = ('slug', 'avatar', 'email', 'display_name', 'introduction', 'followers', 'following', 'followed', 'posts', 'total_view')
 
 
     def get_followed(self, obj):
-        me =  self.context['me']
+        r =  self.context['request']
+        try:
+            me = r.user
+        except:
+            me = None
+
         if me:
-            followed = Relationship.objects.filter(
-                from_person=me.id, 
-                to_person=obj.id, 
-                status=RELATIONSHIP_FOLLOWING
-            ).exists()
-            return followed
+            try:
+                followed = Relationship.objects.get(
+                    from_person=me.id, 
+                    to_person=obj.id, 
+                    status=RELATIONSHIP_FOLLOWING
+                )
+            except Relationship.DoesNotExist:
+                return False
+            return True
         return False
 
     def get_followers(self, obj):
@@ -91,44 +101,54 @@ class DetailAccountSerializer(serializers.ModelSerializer):
     def get_following(self, obj):
         return obj.get_following().count()
 
-    # def get_posts(self, obj):
-    #     return obj.posts.all().count()
+    def get_total_view(self, obj):
+        posts = Post.objects.filter(author=obj.id).aggregate(Sum('views'))
+        return posts['views__sum']
 
-    # def get_total_view(self, obj):
-    #     return obj.posts.all().count('views')
+    def get_posts(self, obj):
+        return Post.objects.filter(author=obj.id).count()
 
 
 class ListAccountSerializer(serializers.ModelSerializer):
     """Detail User Info """
     followed = serializers.SerializerMethodField('get_followed')   
     followers = serializers.SerializerMethodField('get_followers')
-    # total_view = serializers.SerializerMethodField('get_total_view')
-    # posts = serializers.SerializerMethodField('get_posts_num')
+    total_view = serializers.SerializerMethodField('get_total_view')
+    posts = serializers.SerializerMethodField('get_posts')
     
     class Meta:
         model = Account
-        fields = ('slug', 'thumbnail_small', 'display_name', 'followers', 'followed') # posts, total_view
+        fields = ('slug', 'thumbnail_small', 'display_name', 'followers', 'followed', 'posts', 'total_view') # posts, total_view
 
 
     def get_followed(self, obj):
-        me =  self.context['me']
+        r =  self.context['request']
+        try:
+            me = r.user
+        except:
+            me = None
+
         if me:
-            followed = Relationship.objects.filter(
-                from_person=me.id, 
-                to_person=obj.id, 
-                status=RELATIONSHIP_FOLLOWING
-            ).exists()
-            return followed
+            try:
+                followed = Relationship.objects.get(
+                    from_person=me.id, 
+                    to_person=obj.id, 
+                    status=RELATIONSHIP_FOLLOWING
+                )
+            except Relationship.DoesNotExist:
+                return False
+            return True
         return False
 
     def get_followers(self, obj):
         return obj.get_followers().count()
     
-    # def get_total_view(self, obj):
-    #     return obj.posts.all().count('views')
+    def get_total_view(self, obj):
+        posts = Post.objects.filter(author=obj.id).aggregate(Sum('views'))
+        return posts['views__sum']
 
-    # def get_posts(self, obj):
-    #     return obj.posts.all().count()
+    def get_posts(self, obj):
+        return Post.objects.filter(author=obj.id).count()
 
 
 class AccountUpdateSerializer(serializers.ModelSerializer):
@@ -185,3 +205,14 @@ class ChangePasswordSerializer(serializers.Serializer):
         if data.get('new_password') != data.get('confirm_new_password'):
             raise serializers.ValidationError(_('Mismatch'))
         return data
+
+
+class CommentAccountSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Account
+        fields = ('display_name', 'thumbnail_tiny', 'slug')
+    
+class PostListAccountSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Account
+        fields = ('display_name', 'thumbnail_small', 'slug')

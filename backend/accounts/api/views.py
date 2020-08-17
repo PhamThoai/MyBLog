@@ -6,8 +6,10 @@ from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework.views import APIView
+from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.decorators import (
     api_view, 
     permission_classes, 
@@ -16,6 +18,7 @@ from rest_framework.decorators import (
 )
 from rest_framework.renderers import TemplateHTMLRenderer, JSONRenderer
 from rest_framework.parsers import MultiPartParser
+from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.permissions import (
     AllowAny,
     IsAuthenticated 
@@ -28,7 +31,6 @@ from accounts.models import (
     Relationship,
     RELATIONSHIP_FOLLOWING,
     RELATIONSHIP_REPORT,
-
 )
 from .serializers import (
     RegisterSerializer,
@@ -38,6 +40,9 @@ from .serializers import (
     AccountUpdateSerializer,
     AccountUpdateAvatarSerializer
 )
+
+from posts.api.serializers import PostListSerializer
+from posts.models import Post
 
 
 @api_view(['POST'])
@@ -137,12 +142,7 @@ def detail_user_profile_apiview(request, slug):
     except UserModel.DoesNotExist:
         return Response(status=status.HTTP_404_NOT_FOUND)
 
-    try:
-        me = request.user
-    except:
-        me = None
-
-    context = {'me': me}
+    context = {'request': request}
     
     if request.method == 'GET':
         serializer = DetailAccountSerializer(user, context=context)
@@ -189,51 +189,9 @@ def update_user_avatar_apiview(request):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def get_followers_apiview(request, slug):
-    try:
-        user = Account.objects.get(slug=slug)
-    except:
-        return Response(status=status.HTTP_404_NOT_FOUND)
-    
-    try:
-        me = request.user
-    except:
-        me = None
-
-    context = {'me': me}
-
-    if request.method == 'GET':
-        followers = user.get_followers()
-        serializer = ListAccountSerializer(followers, many=True, context=context)
-        return Response(data=serializer.data, status=status.HTTP_200_OK)
-
-
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def get_following_apiview(request, slug):
-    try:
-        user = Account.objects.get(slug=slug)
-    except:
-        return Response(status=status.HTTP_404_NOT_FOUND)
-    
-    try:
-        me = request.user
-    except:
-        me = None
-
-    context = {'me': me}
-
-    if request.method == 'GET':
-        following = user.get_following()
-        serializer = ListAccountSerializer(following, many=True, context=context)
-        return Response(data=serializer.data, status=status.HTTP_200_OK)
-
-
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def follow_apiview(request, slug):
+def follow_user_apiview(request, slug):
     try:
         user = Account.objects.get(slug=slug)
     except:
@@ -245,13 +203,15 @@ def follow_apiview(request, slug):
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
     if request.method == 'POST':
+        if me == user:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
         me.add_relationship(person=user, status=RELATIONSHIP_FOLLOWING)
         return Response(status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def unfollow_apiview(request, slug):
+def unfollow_user_apiview(request, slug):
     try:
         user = Account.objects.get(slug=slug)
     except:
@@ -263,6 +223,8 @@ def unfollow_apiview(request, slug):
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
     if request.method == 'POST':
+        if me == user:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
         me.add_relationship(person=user, status=RELATIONSHIP_FOLLOWING)
         return Response(status=status.HTTP_200_OK)
 
@@ -281,9 +243,57 @@ def report_apiview(request, slug, description):
         return Response(status=status.HTTP_404_NOT_FOUND)
 
     if request.method == 'POST':
+        if me == user:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
         Relationship.objects.filter(from_person=me, to_person=user, status=RELATIONSHIP_FOLLOWING).delete()
         return Response(status=status.HTTP_200_OK)
 
+class GetFollowers(generics.ListAPIView):
+    serializer_class = ListAccountSerializer
+    permission_classes = [AllowAny]
+    pagination_class = PageNumberPagination
+    filter_backends = [SearchFilter, OrderingFilter]
+
+    def get_queryset(self):
+        """
+        This view should return a list of all the followers of
+        the account as determined by the slug portion of the URL.
+        """
+        slug = self.kwargs['slug']
+        try:
+            user = Account.objects.get(slug=slug)
+        except Account.DoesNotExist:
+            return []
+        return user.get_followers()
 
 
+class GetFollowing(generics.ListAPIView):
+    serializer_class = ListAccountSerializer
+    permission_classes = [AllowAny]
+    pagination_class = PageNumberPagination
+    filter_backends = [SearchFilter, OrderingFilter]
 
+    def get_queryset(self):
+
+        slug = self.kwargs['slug']
+        try:
+            user = Account.objects.get(slug=slug)
+        except Account.DoesNotExist:
+            return []
+        return user.get_following()
+
+
+class GetPosts(generics.ListAPIView):
+    serializer_class = PostListSerializer
+    permission_classes = [AllowAny]
+    pagination_class = PageNumberPagination
+    filter_backends = [SearchFilter, OrderingFilter]
+
+    def get_queryset(self):
+
+        slug = self.kwargs['slug']
+        try:
+            user = Account.objects.get(slug=slug)
+        except Account.DoesNotExist:
+            return []
+        return user.get_posts()

@@ -1,5 +1,7 @@
 from rest_framework import serializers
 from tags.models import Tag
+from posts.models import Post
+from accounts.api.serializers import CommentAccountSerializer
 
 class CreateTagSerializer(serializers.ModelSerializer):
     class Meta:
@@ -7,25 +9,21 @@ class CreateTagSerializer(serializers.ModelSerializer):
         fields = ['title']
 
 class DetailTagSerializer(serializers.ModelSerializer):
-    # posts = serializers.SerializerMethodField()
+    posts = serializers.SerializerMethodField()
     author = serializers.SerializerMethodField()
     class Meta:
         model = Tag
-        fields = ['id', 'title', 'slug', 'create_at', 'author']
+        fields = ['title', 'slug', 'create_at', 'author', 'posts']
 
-    # def get_posts(self, obj):
-    #     return obj.post.all().count()
+    def get_posts(self, obj):
+        return obj.post.all().count()
 
     def get_author(self, obj):
-        return obj.author.display_name
+        return CommentAccountSerializer(obj.author).data
 
-class ListTagSerializer(serializers.ModelSerializer):
-    # posts = serializers.SerializerMethodField()
+class ListTagInPostSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
-        fields = ['id', 'title', 'slug']
-
-    # def get_posts(self, obj):
-    #     return obj.post.all().count()
+        fields = ['title', 'slug']
 
 

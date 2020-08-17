@@ -24,15 +24,27 @@ class CommentAPIView(APIView):
 
         serializer = CreateCommentSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(author=user)
-            return Response(data=serializer.data, status=status.HTTP_201_CREATED)
+            try:
+                post = Post.objects.get(slug=request.data.get('post'))
+            except Post.DoesNotExist:
+                return Response(status=status.HTTP_404_NOT_FOUND)
+            parent_comment = serializer.data.get('parent_comment', None)
+            if parent_comment:
+                try:
+                    parent_comment = Comment.objects.get(id=parent_comment_id)
+                except Comment.DoesNotExist:
+                    parent_comment = None
+            comment = Comment()
+            comment.body = serializer.data.get('body')
+            comment.post = post
+            comment.author = user
+            comment.parent_comment = parent_comment
+            comment.save()
+            return Response(data=DetailCommentSerializer(comment).data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         # post_slug = request.data.get('post')
-        # try:
-        #     post = Post.objects.get(slug=post_slug)
-        # except Post.DoesNotExist:
-        #     return Response(status=status.HTTP_404_NOT_FOUND)
+        
         
         # parent_comment_id = request.data.get('parent_comment')
         # if parent_comment:
@@ -65,7 +77,7 @@ class CommentAPIView(APIView):
 
         serializer = UpdateCommentSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(r)
+            serializer.save()
             return Response(data=serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
