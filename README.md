@@ -50,20 +50,34 @@ A blog system based on `Python 3.7.3` and `Django3.0.8`.
    ```
    pip install -r requirements.txt
    ```
-4. Migrate the database
+4. Configured for django-rest-framework-social-oauth2
+
+   ```
+   # Facebook configuration
+   SOCIAL_AUTH_FACEBOOK_KEY = '<your app id goes here>'
+   SOCIAL_AUTH_FACEBOOK_SECRET = '<your app secret goes here>'
+   ```
+   and
+   ```
+   # Google configuration
+   SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = <your app id goes here>
+   SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = <your app secret goes here>
+   ```
+   
+5. Migrate the database
 
    ```
    python manage.py makemigrations
    python manage.py migrate
    ```
 
-5. Create background administrator account
+6. Create background administrator account
 
    ```
    python manage.py createsuperuser
    ```
    
-6. Run the development server
+7. Run the development server
 
    ```
    python manage.py runserver
